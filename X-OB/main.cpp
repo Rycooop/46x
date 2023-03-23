@@ -8,7 +8,7 @@
 
 
 int main(int argc, char** argv) {
-	std::vector<std::uint8_t> ExampleInstruction = { 0x5D };
+	std::vector<std::uint8_t> ExampleInstruction = { 0x48, 0x89, 0x6C, 0x24, 0x18 };
 
 	Instruction* instruction = Instruction::Decode(ExampleInstruction);
 

@@ -66,12 +66,14 @@ public:
 
 		static Opcode GetOpcode(const std::vector<std::uint8_t>& bytes, Instruction::Prefix::Rex* rex);
 		inline static bool HasOpcodeEscapeSequence(const std::vector<std::uint8_t>& opcode) { return (opcode[0] == 0x0F); }
+		const static bool OpcodeHasRegisterExtension(std::uint8_t opcode);
+		const static bool OpcodeDBitOverride(std::uint8_t opcode);
 		
 		const static std::map<std::uint8_t, std::vector<std::uint8_t>> OPCODE_LOOKUP_TABLE;
 		const static std::map<std::uint8_t, std::vector<std::string>> OPCODE_NAME_LOOKUP_TABLE;
 
 		enum OPERAND_TYPE {
-			OPERAND_REGISTER,
+			OPERAND_REGISTER_RAX,
 			OPERAND_MODRM,
 			OPERAND_IMMEDIATE8,
 			OPERAND_IMMEDIATE32,
@@ -79,19 +81,30 @@ public:
 
 		class ModRM {
 		public:
-			const static bool ContainsModRM(const std::vector<std::uint8_t>& operands);
-			const static bool NeedsModRMByte(const std::vector<std::uint8_t>& operands);
+			const static std::string GetDisplacement(std::uint8_t mod, std::uint8_t rm, std::uint8_t rexw, std::uint8_t rexx, std::uint8_t rexb, std::vector<std::uint8_t>& bytes);
+
+			const static bool NeedsModRMByte(std::uint8_t opcode, const std::vector<std::uint8_t>& operands);
+			const static bool HasDoubleModRM(const std::vector<std::uint8_t>& operands);
 			const static inline bool IsModRMArg(std::uint8_t arg) { return (arg == OPERAND_MODRM); }
 
-			const static std::map<std::uint8_t, std::vector<std::uint8_t>> MODRM_LOOKUP_TABLE;
+			const static std::uint8_t GetAdressingMode(std::uint8_t mod);
 
-			const static std::map<std::tuple<std::uint8_t, std::uint8_t, std::uint8_t>, std::string> MODRM_NAME_LOOKUP_TABLE; //PAIR(MOD, RM, REX.B)
-			const static std::map<std::pair<std::uint8_t, std::uint8_t>, std::string> MODR_NAME_LOOKUP_TABLE; //PAIR(REG, REX.R)
+			const static std::map<std::pair<std::uint8_t, std::uint8_t>, std::string> MODRM_REGISTER_LOOKUP_TABLE; //PAIR(REG/RM, REX.B/R)
+
+			enum ADDRESSING_MODE {
+				MOD_INDIRECT_ADDRESSING = 0,
+				MOD_INDIRECT_DISP8,
+				MOD_INDIRECT_DISP32,
+				MOD_DIRECT_ADDRESSING,
+			};
 		};
 
 		class SIB {
 		public:
+			static std::string GetSIB(std::uint8_t sib, std::uint8_t rexw, std::uint8_t rexb, std::uint8_t rexx);
 
+			static const std::map<std::pair<std::uint8_t, std::uint8_t>, std::string> SIB_BASE_LOOKUP; //PAIR(sib.base, rex.b)
+			static const std::map<std::tuple<std::uint8_t, std::uint8_t, std::uint8_t>, std::string> SIB_INDEX_LOOKUP; //PAIR(sib.scale, sib.index, rex.x)
 		};
 	};
 

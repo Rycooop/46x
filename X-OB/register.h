@@ -29,9 +29,11 @@ public:
 
 	const static std::vector<std::string> VALID_REGISTERS;
 	const static std::map<std::string, std::vector<std::string>> REGISTER_PARTS;
+	const static std::map<std::string, std::vector<std::string>> REGISTER_PARTS64;
 
 	enum REGISTER_PART_INDEX {
-		PART_32 = 0,
+		PART_EXTENDED64 = 0,
+		PART_32 = 1,
 		PART_16,
 		PART_HIGHER_8,
 		PART_LOWER_8,
