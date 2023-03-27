@@ -16,6 +16,23 @@ std::string Register::GetRegisterPart(const std::string& reg, const std::uint8_t
 	else return "Unknown_register";
 }
 
+bool Register::GetTwosCompliment8(std::uint8_t& val) {
+	if (!(val & 0x80)) return false;
+	
+
+	val = ~val;
+	val += 1;
+	return true;
+}
+
+bool Register::GetTwosCompliment32(std::uint32_t& val) {
+	if (!(val & 0x80000000)) return false;
+
+	val = ~val;
+	val += 1;
+	return true;
+}
+
 const std::vector<std::string> Register::VALID_REGISTERS = {
 		"rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
 };

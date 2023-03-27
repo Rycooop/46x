@@ -27,6 +27,9 @@ public:
 	
 	static std::string GetRegisterPart(const std::string& reg, const std::uint8_t partIndex);
 
+	static bool GetTwosCompliment8(std::uint8_t& val);
+	static bool GetTwosCompliment32(std::uint32_t& val);
+
 	const static std::vector<std::string> VALID_REGISTERS;
 	const static std::map<std::string, std::vector<std::string>> REGISTER_PARTS;
 	const static std::map<std::string, std::vector<std::string>> REGISTER_PARTS64;

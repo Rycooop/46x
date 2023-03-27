@@ -2,13 +2,13 @@
 #define XOB_INSTRUCTION_H
 
 #ifdef _DEBUG
-#include <iostream>
 #endif
 
 #include <vector>
 #include <map>
 #include <string>
 #include <tuple>
+#include <iostream>
 
 #include "register.h"
 
@@ -17,15 +17,15 @@
 
 class Instruction {
 public:
-	std::vector<unsigned char> Bytes;
-	std::vector<std::uint8_t> LegacyPrefixes;
-	std::uint8_t Length;
+	std::vector<unsigned char> m_Bytes;
+	std::vector<std::uint8_t> m_LegacyPrefixes;
+	std::uint8_t m_Size;
 
 	//Mandatory prefix, rex prefix, opcode
 
 	Instruction() {
-		this->LegacyPrefixes = std::vector<std::uint8_t>(1);
-		this->Length = 0;
+		this->m_LegacyPrefixes = std::vector<std::uint8_t>(1);
+		this->m_Size = 0;
 		this->op = new Opcode();
 	}
 
@@ -68,7 +68,7 @@ public:
 		inline static bool HasOpcodeEscapeSequence(const std::vector<std::uint8_t>& opcode) { return (opcode[0] == 0x0F); }
 		const static bool OpcodeHasRegisterExtension(std::uint8_t opcode);
 		const static bool OpcodeDBitOverride(std::uint8_t opcode);
-		
+
 		const static std::map<std::uint8_t, std::vector<std::uint8_t>> OPCODE_LOOKUP_TABLE;
 		const static std::map<std::uint8_t, std::vector<std::string>> OPCODE_NAME_LOOKUP_TABLE;
 
@@ -77,11 +77,14 @@ public:
 			OPERAND_MODRM,
 			OPERAND_IMMEDIATE8,
 			OPERAND_IMMEDIATE32,
+			OPERAND_REL8,
+			OPERAND_REL32,
 		};
 
 		class ModRM {
 		public:
 			const static std::string GetDisplacement(std::uint8_t mod, std::uint8_t rm, std::uint8_t rexw, std::uint8_t rexx, std::uint8_t rexb, std::vector<std::uint8_t>& bytes);
+			const static std::uint8_t GetDisplacementInBytes(std::uint8_t mod);
 
 			const static bool NeedsModRMByte(std::uint8_t opcode, const std::vector<std::uint8_t>& operands);
 			const static bool HasDoubleModRM(const std::vector<std::uint8_t>& operands);
@@ -119,4 +122,4 @@ public:
 };
 
 
-#endif //XOB_INSTRUCTION_H
+#endif //XOB_INSTRUCTION
