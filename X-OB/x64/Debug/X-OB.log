@@ -1,5 +1,0 @@
-﻿  instruction.cpp
-C:\Users\rycoo\Desktop\X-OB\X-OB\instruction.cpp(22,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  main.cpp
-  Generating Code...
-  X-OB.vcxproj -> C:\Users\rycoo\Desktop\X-OB\x64\Debug\X-OB.exe
