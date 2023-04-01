@@ -20,6 +20,7 @@ public:
 	std::vector<unsigned char> m_Bytes;
 	std::vector<std::uint8_t> m_LegacyPrefixes;
 	std::uint8_t m_Size;
+	bool m_ValidInstruction;
 
 	//Mandatory prefix, rex prefix, opcode
 
@@ -27,6 +28,7 @@ public:
 		this->m_LegacyPrefixes = std::vector<std::uint8_t>(1);
 		this->m_Size = 0;
 		this->op = new Opcode();
+		this->m_ValidInstruction = true;
 	}
 
 	static Instruction* Decode(const std::vector<std::uint8_t>& bytes);

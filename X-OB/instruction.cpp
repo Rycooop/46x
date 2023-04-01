@@ -2,7 +2,7 @@
 
 
 Instruction* Instruction::Decode(const std::vector<std::uint8_t>& bytes) {
-	if (!bytes.size() || bytes.size() > INSTRUCTION_MAX_LENGTH) return {};
+	if (!bytes.size() /* || bytes.size() > INSTRUCTION_MAX_LENGTH*/) return {};
 
 	std::vector<std::uint8_t> InstructionBytes;
 	Instruction* instruction = new Instruction();
@@ -38,9 +38,12 @@ Instruction* Instruction::Decode(const std::vector<std::uint8_t>& bytes) {
 
 	std::vector<std::uint8_t> RemainingBytes = std::vector<std::uint8_t>(bytes.begin() + index, bytes.end());
 	Opcode opcode = Instruction::Opcode::GetOpcode(RemainingBytes, rex);
-
 	instruction->op = &opcode;
 	instruction->m_Size = LegacyPrefixes.size() + IsRex + opcode.m_Bytes.size();
+
+	if (opcode.m_Bytes.empty() || opcode.m_ToString->compare("Unknown opcode") == 0) {
+		instruction->m_ValidInstruction = false;
+	}
 
 	return instruction;
 }
@@ -117,8 +120,8 @@ Instruction::Opcode Instruction::Opcode::GetOpcode(const std::vector<std::uint8_
 			}
 		}
 		else if (operands.at(i) == OPERAND_IMMEDIATE8) {
-			BytesIndex++;
 			InstructionToString += std::to_string(bytes.at(BytesIndex));
+			BytesIndex++;
 		}
 		else if (operands.at(i) == OPERAND_IMMEDIATE32) {
 			std::uint8_t ImmediateStart = BytesIndex;
@@ -186,100 +189,6 @@ const bool Instruction::Opcode::OpcodeDBitOverride(std::uint8_t opcode) {
 
 	return false;
 }
-
-//---------------------------------------------------------------------------------------------------------------
-
-const std::map<std::uint8_t, std::vector<std::uint8_t>> Instruction::Opcode::OPCODE_LOOKUP_TABLE = {
-	{0x03, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-
-	{0x2B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-
-	{0x32, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x33, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x3B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x3D, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE32}},
-
-	{0x53, {Instruction::Opcode::OPERAND_MODRM}},
-	{0x55, {Instruction::Opcode::OPERAND_MODRM}},
-	{0x56, {Instruction::Opcode::OPERAND_MODRM}},
-	{0x57, {Instruction::Opcode::OPERAND_MODRM}},
-	{0x5D, {Instruction::Opcode::OPERAND_MODRM}},
-	{0x5E, {Instruction::Opcode::OPERAND_MODRM}},
-
-	{0x6B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
-
-	{0x73, {Instruction::Opcode::OPERAND_REL8}},
-	{0x74, {Instruction::Opcode::OPERAND_REL8}},
-	{0x75, {Instruction::Opcode::OPERAND_REL8}},
-
-	{0x81, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
-	{0x83, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
-	{0x84, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x85, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-
-	{0x88, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x89, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-
-	{0x8A, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x8B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-	{0x8D, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
-
-	{0xB8, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
-	{0xB9, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
-
-	{0xC1, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
-	{0xC2, {Instruction::Opcode::OPERAND_IMMEDIATE32}},
-	{0xC3, {}},
-	{0xC7, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
-
-	{0xE9, {Instruction::Opcode::OPERAND_REL32}},
-};
-
-const std::map<std::uint8_t, std::vector<std::string>> Instruction::Opcode::OPCODE_NAME_LOOKUP_TABLE = { //opcode -> {ModRM.reg}
-	{0x03, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
-
-	{0x2B, {"SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB"}},
-
-	{0x32, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
-	{0x33, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
-	{0x3B, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
-	{0x3D, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
-
-	{0x53, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
-	{0x55, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
-	{0x56, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
-	{0x57, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
-	{0x5D, {"POP", "POP", "POP", "POP", "POP", "POP", "POP", "POP"}},
-	{0x5E, {"POP", "POP", "POP", "POP", "POP", "POP", "POP", "POP"}},
-
-	{0x6B, {"IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL"}},
-
-	{0x73, {"JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC"}},
-	{0x74, {"JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE"}},
-	{0x75, {"JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE"}},
-
-	{0x81, {"ADD", "OR", "ADC", "SBB", "AND", "SUB", "XOR", "CMP"}},
-	{0x83, {"ADD", "OR", "ADC", "SBB", "AND", "SUB", "XOR", "CMP"}},
-	{0x84, {"TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST"}},
-	{0x85, {"TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST"}},
-
-	{0x88, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-	{0x89, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-
-	{0x8A, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-	{0x8B, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-	{0x8D, {"LEA", "LEA", "LEA", "LEA", "LEA", "LEA", "LEA", "LEA"}},
-
-	{0xB8, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-	{0xB9, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-
-	{0xC1, {"ROL", "ROR", "RCL", "RCR", "SHL/SAL", "SHR", "SAL/SHL", "SAR"}},
-	{0xC2, {"RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN"}},
-	{0xC3, {"RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN"}},
-	{0xC7, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
-
-	{0xE9, {"JMP", "JMP", "JMP", "JMP", "JMP", "JMP", "JMP", "JMP"}},
-};
 
 //---------------------------------------------------------------------------------------------------------------
 
@@ -533,4 +442,124 @@ const std::map<std::tuple<std::uint8_t, std::uint8_t, std::uint8_t>, std::string
 	{{0x03, 0x05, 0x01}, "R13D*8"},
 	{{0x03, 0x06, 0x01}, "R14D*8"},
 	{{0x03, 0x07, 0x01}, "R15D*8"},
+};
+
+//---------------------------------------------------------------------------------------------------------------
+
+const std::map<std::uint8_t, std::vector<std::uint8_t>> Instruction::Opcode::OPCODE_LOOKUP_TABLE = {
+	{0x00, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x01, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x02, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x03, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x04, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE8}},
+	{0x05, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+
+	{0x08, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x09, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x0A, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x0B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x0C, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE8}},
+	{0x0D, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+
+	{0x2B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+
+	{0x32, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x33, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x3B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x3D, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+
+	{0x53, {Instruction::Opcode::OPERAND_MODRM}},
+	{0x55, {Instruction::Opcode::OPERAND_MODRM}},
+	{0x56, {Instruction::Opcode::OPERAND_MODRM}},
+	{0x57, {Instruction::Opcode::OPERAND_MODRM}},
+	{0x5D, {Instruction::Opcode::OPERAND_MODRM}},
+	{0x5E, {Instruction::Opcode::OPERAND_MODRM}},
+
+	{0x6B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
+
+	{0x73, {Instruction::Opcode::OPERAND_REL8}},
+	{0x74, {Instruction::Opcode::OPERAND_REL8}},
+	{0x75, {Instruction::Opcode::OPERAND_REL8}},
+
+	{0x81, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+	{0x83, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
+	{0x84, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x85, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+
+	{0x88, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x89, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+
+	{0x8A, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x8B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x8D, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+
+	{0xB8, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+	{0xB9, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+
+	{0xC1, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE8}},
+	{0xC2, {Instruction::Opcode::OPERAND_IMMEDIATE32}},
+	{0xC3, {}},
+	{0xC7, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_IMMEDIATE32}},
+
+	{0xE8, {Instruction::Opcode::OPERAND_REL32}},
+	{0xE9, {Instruction::Opcode::OPERAND_REL32}},
+};
+
+const std::map<std::uint8_t, std::vector<std::string>> Instruction::Opcode::OPCODE_NAME_LOOKUP_TABLE = { //opcode -> {ModRM.reg}
+	{0x00, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+	{0x01, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+	{0x02, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+	{0x03, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+	{0x04, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+	{0x05, {"ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD", "ADD"}},
+
+	{0x08, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+	{0x09, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+	{0x0A, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+	{0x0B, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+	{0x0C, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+	{0x0D, {"OR", "OR", "OR", "OR", "OR", "OR", "OR", "OR"}},
+
+	{0x2B, {"SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB", "SUB"}},
+
+	{0x32, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
+	{0x33, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
+	{0x3B, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
+	{0x3D, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
+
+	{0x53, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
+	{0x55, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
+	{0x56, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
+	{0x57, {"PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH", "PUSH"}},
+	{0x5D, {"POP", "POP", "POP", "POP", "POP", "POP", "POP", "POP"}},
+	{0x5E, {"POP", "POP", "POP", "POP", "POP", "POP", "POP", "POP"}},
+
+	{0x6B, {"IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL", "IMUL"}},
+
+	{0x73, {"JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC", "JNB/JAE/JNC"}},
+	{0x74, {"JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE", "JZ/JE"}},
+	{0x75, {"JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE", "JNZ/JNE"}},
+
+	{0x81, {"ADD", "OR", "ADC", "SBB", "AND", "SUB", "XOR", "CMP"}},
+	{0x83, {"ADD", "OR", "ADC", "SBB", "AND", "SUB", "XOR", "CMP"}},
+	{0x84, {"TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST"}},
+	{0x85, {"TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST", "TEST"}},
+
+	{0x88, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+	{0x89, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+
+	{0x8A, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+	{0x8B, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+	{0x8D, {"LEA", "LEA", "LEA", "LEA", "LEA", "LEA", "LEA", "LEA"}},
+
+	{0xB8, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+	{0xB9, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+
+	{0xC1, {"ROL", "ROR", "RCL", "RCR", "SHL/SAL", "SHR", "SAL/SHL", "SAR"}},
+	{0xC2, {"RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN"}},
+	{0xC3, {"RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN", "RETN"}},
+	{0xC7, {"MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV", "MOV"}},
+
+	{0xE8, {"CALL", "CALL", "CALL", "CALL", "CALL", "CALL", "CALL", "CALL"}},
+	{0xE9, {"JMP", "JMP", "JMP", "JMP", "JMP", "JMP", "JMP", "JMP"}},
 };
