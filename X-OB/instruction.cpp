@@ -232,12 +232,18 @@ const std::string Instruction::Opcode::ModRM::GetDisplacement(std::uint8_t mod, 
 		}
 		else {
 			std::string reg = ModRM::MODRM_REGISTER_LOOKUP_TABLE.at({ rm, rexb });
-			std::string DispAmount = std::to_string(bytes.at(1));
+			std::uint8_t DispAmmount = bytes.at(1);
+			std::string DispAmmountToString = "";
+
+			if (Register::GetTwosCompliment8(DispAmmount)) {
+				DispAmmountToString = "-" + std::to_string(DispAmmount);
+			}
+			else DispAmmountToString = "+" + std::to_string(DispAmmount);
 
 			if (rexw) reg = Register::GetRegisterPart(reg, Register::PART_EXTENDED64);
 
 			Displacement += reg;
-			Displacement += "+" + DispAmount;
+			Displacement += DispAmmountToString;
 		}
 
 		Displacement += "]";
