@@ -471,6 +471,8 @@ const std::map<std::uint8_t, std::vector<std::uint8_t>> Instruction::Opcode::OPC
 
 	{0x32, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
 	{0x33, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x38, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
+	{0x39, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
 	{0x3B, {Instruction::Opcode::OPERAND_MODRM, Instruction::Opcode::OPERAND_MODRM}},
 	{0x3D, {Instruction::Opcode::OPERAND_REGISTER_RAX, Instruction::Opcode::OPERAND_IMMEDIATE32}},
 
@@ -530,6 +532,8 @@ const std::map<std::uint8_t, std::vector<std::string>> Instruction::Opcode::OPCO
 
 	{0x32, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
 	{0x33, {"XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR", "XOR"}},
+	{0x38, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
+	{0x39, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
 	{0x3B, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
 	{0x3D, {"CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP", "CMP"}},
 
