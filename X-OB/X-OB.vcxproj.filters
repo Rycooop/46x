@@ -18,9 +18,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="deadstore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="register.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -29,12 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="deadstore.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="chunk.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="instruction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
